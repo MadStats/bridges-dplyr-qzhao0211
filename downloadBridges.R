@@ -24,7 +24,7 @@ dest = "https://www.fhwa.dot.gov/bridge/nbi/2016/delimited/AK16.txt"
 tmp = fread(dest) 
 tmp = as.tbl(tmp)
 tmp1 = read_csv(dest)
-tmp2 = read_csv(dest, col_types = "character")  # could make them all characters...
+tmp2 = read_csv(dest, col_types = "c")  # could make them all characters...
 classes = sapply(tmp, class)
 
 
@@ -184,3 +184,34 @@ dat = wi %>% group_by(fips) %>% summarize(propGoodRoads = mean(good))
 
 dat %>% transmute(region = fips, value = propGoodRoads) %>% county_choropleth(state_zoom = "wisconsin")
 
+
+wi%>% group_by(YEAR_BUILT_027)%>%summarize(prop = mean(rate == "good"))%>%
+  ggplot(mapping = aes(x = YEAR_BUILT_027,y=prop)) + geom_point()
+
+
+
+deck=wi %>% select(DECK_COND_058) %>% filter(DECK_COND_058 != "N")
+
+qplot(factor(DECK_COND_058), data=deck, geom="bar", fill=factor(DECK_COND_058),xlab = "deck condiation",ylab="number",main = "Bar chart of WI's bridge deck condiation")
+
+sub=wi%>%filter(SUBSTRUCTURE_COND_060 != "N")%>%mutate(subrate=as.numeric(SUBSTRUCTURE_COND_060))%>%
+  
+count(vars=subrate)
+
+qplot(vars, data=sub, weight=n, geom="histogram",xlab = "condiation code",ylab = "occurance",main="distribution of substrusture condiation")
+
+tx=filter(x,STATE_CODE_001==48)%>%select(YEAR_BUILT_027,TOLL_020) %>%filter(TOLL_020<3)
+
+tx1=matrix(data=rep(NA,62),nrow = 62,ncol=1)
+for(i in 1954:2015){
+  tx1[i-1953,]=sum(tx$TOLL_020[tx$YEAR_BUILT_027==i])
+}
+tx1=cbind(1954:2015,tx1)
+colnames(tx1)=c("year","number")
+tx1=as.data.frame(tx1)
+m <- ggplot(tx1, aes(x=year))
+m+ geom_histogram(aes(y = ..density..),fill="white",color="black") +geom_density(color="red")+ggtitle("Number of Toll road/bridge by year in TX")
+
+m+geom_dotplot(dotsize = 0.7 ,position = "dodge")
+
+ggplot(aes(x=year,y=number),data = tx1)+geom_point()+geom_smooth()+ggtitle("Scatterplot of number of Toll road/bridge VS year in TX")
